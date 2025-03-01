@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../types/supabase";
 
+// Using the provided Supabase credentials
 const supabaseUrl = "https://ibfeluxkyeerjzkxiaki.supabase.co";
 const supabaseAnonKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImliZmVsdXhreWVlcmp6a3hpYWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNjEwNjIsImV4cCI6MjA1NDgzNzA2Mn0.wu5KePMH7lZCzy3TY6Ok5-e0C3LHjV3ZqdyUv2RdvVI";

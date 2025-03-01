@@ -9,6 +9,17 @@ import {
   ResizablePanelGroup,
 } from "../components/ui/resizable";
 import { motion, AnimatePresence } from "framer-motion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Button } from "./ui/button";
+import {
+  FileCode,
+  Terminal,
+  Play,
+  Settings,
+  Layout,
+  PanelLeft,
+  PanelRight,
+} from "lucide-react";
 
 interface CodeEditorProps {
   initialHtmlCode?: string;
@@ -156,7 +167,51 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full h-full bg-gray-900 transition-colors duration-300">
+    <div className="flex flex-col w-full h-full bg-[#1e1e1e] transition-all duration-300">
+      <div className="flex items-center bg-[#252526] border-b border-[#3c3c3c] px-2 py-1">
+        <div className="flex items-center space-x-2 mr-4">
+          <FileCode className="h-4 w-4 text-blue-400" />
+          <span className="text-sm text-gray-300">CodePen Project</span>
+        </div>
+
+        <Tabs defaultValue={currentView} className="flex-1">
+          <TabsList className="bg-[#2d2d2d]">
+            <TabsTrigger
+              value="editor"
+              onClick={() => handleToggleView("editor")}
+            >
+              <PanelLeft className="h-4 w-4 mr-2" />
+              Editor
+            </TabsTrigger>
+            <TabsTrigger
+              value="split"
+              onClick={() => handleToggleView("split")}
+            >
+              <Layout className="h-4 w-4 mr-2" />
+              Split
+            </TabsTrigger>
+            <TabsTrigger
+              value="preview"
+              onClick={() => handleToggleView("preview")}
+            >
+              <PanelRight className="h-4 w-4 mr-2" />
+              Preview
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <div className="flex items-center space-x-2 ml-4">
+          <Button variant="ghost" size="sm" onClick={handleToggleAI}>
+            <Settings className="h-4 w-4 mr-2" />
+            AI
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleSave}>
+            <Play className="h-4 w-4 mr-2" />
+            Save
+          </Button>
+        </div>
+      </div>
+
       <EditorControls
         isAuthenticated={isAuthenticated}
         onSave={handleSave}
@@ -194,7 +249,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
           />
         </div>
       ) : currentView === "editor" ? (
-        <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-2 p-2 overflow-hidden">
+        <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-0 overflow-hidden bg-[#1e1e1e]">
           <EditorPanel
             language="html"
             code={htmlCode}
@@ -220,7 +275,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       ) : (
         <ResizablePanelGroup
           direction="vertical"
-          className="flex-grow overflow-hidden bg-gray-950 p-2 rounded-md"
+          className="flex-grow overflow-hidden bg-[#1e1e1e]"
         >
           <ResizablePanel
             defaultSize={50}
@@ -291,32 +346,76 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        /* Global styles to ensure scrolling works properly */
-        .monaco-editor .monaco-scrollable-element {
-          overflow: visible !important;
-        }
-        .monaco-editor .scrollbar {
-          opacity: 1 !important;
-          background: rgba(50, 50, 50, 0.4) !important;
-        }
-        .monaco-editor .scrollbar .slider {
-          background: rgba(100, 100, 100, 0.8) !important;
+        /* VSCode-like styles */
+        body {
+          background-color: #1e1e1e;
+          color: #d4d4d4;
         }
         
         /* Improve resizable panels */
         .resizable-panel {
-          background: #1a1a1a;
-          border-radius: 8px;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          background-color: #1e1e1e;
+          transition: box-shadow 0.3s ease;
         }
         
         .resizable-handle {
-          background: rgba(80, 80, 80, 0.4);
-          transition: background 0.2s;
+          background: #3c3c3c;
+          transition: all 0.3s ease;
+          position: relative;
         }
         
         .resizable-handle:hover {
-          background: rgba(100, 100, 100, 0.6);
+          background: #5a5a5a;
+        }
+        
+        .resizable-handle:active {
+          background: #007fd4;
+        }
+        
+        .resizable-handle[data-orientation="horizontal"]::after {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 4px;
+          height: 20px;
+          background-color: #5a5a5a;
+          border-radius: 2px;
+        }
+        
+        .resizable-handle[data-orientation="vertical"]::after {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 20px;
+          height: 4px;
+          background-color: #5a5a5a;
+          border-radius: 2px;
+        }
+        
+        /* Tab styling */
+        [data-state="active"][data-orientation="horizontal"] {
+          background-color: #1e1e1e;
+          color: #ffffff;
+          border-bottom: 2px solid #007fd4;
+        }
+        
+        /* Editor container */
+        .editor-container {
+          width: 100% !important;
+          height: 100% !important;
+        }
+        
+        /* Monaco editor */
+        .monaco-editor .monaco-scrollable-element {
+          overflow: visible !important;
+        }
+        
+        .monaco-editor, .monaco-editor-background, .monaco-editor .inputarea.ime-input {
+          background-color: #1e1e1e !important;
         }
       `,
         }}

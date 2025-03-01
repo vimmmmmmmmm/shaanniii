@@ -124,9 +124,9 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
 
   return (
     <Card
-      className={`flex flex-col bg-white ${isFullscreen ? "fixed inset-0 z-50" : "h-full"}`}
+      className={`flex flex-col bg-white border-0 ${isFullscreen ? "fixed inset-0 z-50" : "h-full"}`}
     >
-      <div className="flex items-center justify-between p-2 border-b bg-gray-50">
+      <div className="flex items-center justify-between p-2 border-b bg-[#252526] text-white">
         <div className="flex items-center space-x-2">
           <h2 className="text-sm font-medium">Preview</h2>
           <div className="flex border rounded overflow-hidden ml-4">

@@ -1,5 +1,5 @@
 import { Suspense, useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useRoutes } from "react-router-dom";
 import Home from "./components/home";
 import Dashboard from "./components/Dashboard";
 import Explore from "./components/Explore";
@@ -7,6 +7,7 @@ import Editor from "./components/Editor";
 import PenView from "./components/PenView";
 import Profile from "./components/Profile";
 import { getCurrentUser, signOut } from "./lib/supabase-client";
+import routes from "tempo-routes";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -58,6 +59,7 @@ function App() {
       }
     >
       <>
+        {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
         <Routes>
           <Route
             path="/"

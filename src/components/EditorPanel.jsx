@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useToast } from "./ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Button } from "./ui/button";
 import {
@@ -20,7 +21,6 @@ import {
 import Editor from "@monaco-editor/react";
 import { generateContent } from "../lib/gemini";
 import AIQuickEdit from "./AIQuickEdit";
-import { useToast } from "./ui/use-toast"; // Import useToast for better notifications
 
 function EditorPanel({
   language = "html",
@@ -31,13 +31,18 @@ function EditorPanel({
 }) {
   const [editorCode, setEditorCode] = useState(code);
   const [activeTab, setActiveTab] = useState("code");
-  const [useMonaco, setUseMonaco] = useState(true);
+  const [useMonacoEditor, setUseMonacoEditor] = useState(true);
+  const [wordWrap, setWordWrap] = useState("on");
+  const [lineNumbers, setLineNumbers] = useState("on");
+  const [bracketPairColorization, setBracketPairColorization] = useState(true);
+  const [autoIndent, setAutoIndent] = useState(true);
   const [theme, setTheme] = useState("vs-dark");
   const [fontSize, setFontSize] = useState(14);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isAIEditing, setIsAIEditing] = useState(false);
   const editorRef = useRef(null);
   const containerRef = useRef(null);
+  // Remove useMonaco hook as it's causing errors
   const { toast } = useToast(); // Initialize useToast for notifications
 
   useEffect(() => {
@@ -48,6 +53,24 @@ function EditorPanel({
     setEditorCode(code);
   }, [code]);
 
+  // We'll use the default Monaco loader configuration
+
+  // Handle window resize events
+  useEffect(() => {
+    const handleResize = () => {
+      if (editorRef.current) {
+        setTimeout(() => {
+          if (editorRef.current) {
+            editorRef.current.layout();
+          }
+        }, 100);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // Get code with fallback to empty string instead of default code
   const getCode = () => {
     return editorCode || code || "";
@@ -55,22 +78,18 @@ function EditorPanel({
 
   const handleEditorDidMount = (editor) => {
     editorRef.current = editor;
-    // Configure editor for better scrolling
+    // Basic editor configuration
     editor.updateOptions({
-      scrollbar: {
-        vertical: "visible",
-        horizontal: "visible",
-        verticalScrollbarSize: 15,
-        horizontalScrollbarSize: 15,
-        verticalHasArrows: true,
-        horizontalHasArrows: true,
-        arrowSize: 15,
-        useShadows: true,
-      },
-      overviewRulerBorder: false,
       scrollBeyondLastLine: false,
-      minimap: { enabled: false },
+      minimap: { enabled: true },
     });
+
+    // Force a layout update
+    setTimeout(() => {
+      if (editor) {
+        editor.layout();
+      }
+    }, 100);
   };
 
   const handleCodeChange = (value) => {
@@ -113,6 +132,7 @@ function EditorPanel({
     navigator.clipboard.writeText(getCode());
     toast({
       title: "Code copied to clipboard!",
+      description: "The code has been copied to your clipboard.",
     });
   };
 
@@ -129,6 +149,7 @@ function EditorPanel({
     URL.revokeObjectURL(url);
     toast({
       title: "Code downloaded!",
+      description: `Your ${language} code has been downloaded.`,
     });
   };
 
@@ -157,12 +178,13 @@ function EditorPanel({
       setEditorCode(enhancedCode);
       toast({
         title: "Code enhanced successfully!",
+        description: "Your code has been optimized and improved.",
       });
     } catch (error) {
       console.error("Error enhancing code:", error);
       toast({
         title: "Failed to enhance code.",
-        description: "Please try again.",
+        description: "Please try again or modify your code.",
         variant: "destructive",
       });
     } finally {
@@ -173,11 +195,11 @@ function EditorPanel({
   return (
     <div
       ref={containerRef}
-      className={`flex flex-col border rounded-md overflow-hidden bg-gray-900 ${
-        expanded ? "w-full h-full" : "w-full h-[450px]"
+      className={`flex flex-col border-r border-[#3c3c3c] overflow-hidden bg-[#1e1e1e] ${
+        expanded ? "w-full h-full" : "w-full h-full"
       }`}
     >
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-[#3c3c3c]">
         <div className="flex items-center space-x-2">
           <h3 className="text-sm font-medium text-white">
             {getLanguageTitle()}
@@ -208,7 +230,7 @@ function EditorPanel({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-gray-400 hover:text-white hover:bg-gray-700"
+                  className="h-8 w-8 text-gray-400 hover:text-blue-400 hover:bg-gray-800 transition-all duration-200"
                   onClick={enhanceCode}
                   disabled={isEnhancing}
                 >
@@ -231,7 +253,7 @@ function EditorPanel({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-gray-400 hover:text-white hover:bg-gray-700"
+                  className="h-8 w-8 text-gray-400 hover:text-blue-400 hover:bg-gray-800 transition-all duration-200"
                   onClick={copyToClipboard}
                 >
                   <Copy className="h-4 w-4" />
@@ -249,7 +271,7 @@ function EditorPanel({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-gray-400 hover:text-white hover:bg-gray-700"
+                  className="h-8 w-8 text-gray-400 hover:text-blue-400 hover:bg-gray-800 transition-all duration-200"
                   onClick={downloadCode}
                 >
                   <Download className="h-4 w-4" />
@@ -267,7 +289,7 @@ function EditorPanel({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-gray-400 hover:text-white hover:bg-gray-700"
+                  className="h-8 w-8 text-gray-400 hover:text-blue-400 hover:bg-gray-800 transition-all duration-200"
                   onClick={onToggleExpand}
                 >
                   {expanded ? (
@@ -285,11 +307,14 @@ function EditorPanel({
         </div>
       </div>
 
-      <Tabs defaultValue="code" className="flex-1 flex flex-col">
-        <TabsList className="px-4 py-1 bg-gray-800 border-b border-gray-700">
+      <Tabs
+        defaultValue="code"
+        className="flex-1 flex flex-col overflow-hidden"
+      >
+        <TabsList className="px-4 py-1 bg-[#252526] border-b border-[#3c3c3c]">
           <TabsTrigger
             value="code"
-            className="data-[state=active]:bg-gray-700"
+            className="data-[state=active]:bg-[#1e1e1e] data-[state=active]:border-b-2 data-[state=active]:border-[#007fd4]"
             onClick={() => setActiveTab("code")}
           >
             <Code className="h-4 w-4 mr-2" />
@@ -297,7 +322,7 @@ function EditorPanel({
           </TabsTrigger>
           <TabsTrigger
             value="settings"
-            className="data-[state=active]:bg-gray-700"
+            className="data-[state=active]:bg-[#1e1e1e] data-[state=active]:border-b-2 data-[state=active]:border-[#007fd4]"
             onClick={() => setActiveTab("settings")}
           >
             <Settings className="h-4 w-4 mr-2" />
@@ -305,7 +330,10 @@ function EditorPanel({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="code" className="flex-1 p-0 m-0 overflow-hidden">
+        <TabsContent
+          value="code"
+          className="flex-1 p-0 m-0 overflow-hidden border-0"
+        >
           {isAIEditing ? (
             <AIQuickEdit
               initialCode={getCode()}
@@ -317,8 +345,8 @@ function EditorPanel({
               onCancel={() => setIsAIEditing(false)}
               isOpen={isAIEditing}
             />
-          ) : useMonaco ? (
-            <div className="h-full w-full overflow-hidden">
+          ) : useMonacoEditor ? (
+            <div className="h-full w-full overflow-hidden bg-[#1e1e1e]">
               <Editor
                 height="100%"
                 defaultLanguage={getMonacoLanguage()}
@@ -329,30 +357,19 @@ function EditorPanel({
                 theme={theme}
                 options={{
                   fontSize: fontSize,
-                  minimap: { enabled: false },
+                  minimap: { enabled: true },
                   scrollBeyondLastLine: false,
                   automaticLayout: true,
                   tabSize: 2,
-                  wordWrap: "on",
-                  scrollbar: {
-                    vertical: "visible",
-                    horizontal: "visible",
-                    verticalScrollbarSize: 15,
-                    horizontalScrollbarSize: 15,
-                    verticalHasArrows: true,
-                    horizontalHasArrows: true,
-                    arrowSize: 15,
-                    useShadows: true,
-                  },
-                  fixedOverflowWidgets: true,
-                  overviewRulerBorder: false,
+                  wordWrap: wordWrap,
+                  lineNumbers: lineNumbers,
                 }}
                 className="editor-container"
               />
             </div>
           ) : (
             <textarea
-              className="w-full h-full p-4 bg-gray-900 text-gray-100 font-mono text-sm resize-none focus:outline-none scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900"
+              className="w-full h-full p-4 bg-gray-950 text-gray-100 font-mono text-sm resize-none focus:outline-none scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900"
               value={getCode()}
               onChange={handleTextareaChange}
               placeholder="Enter your code here..."
@@ -364,7 +381,7 @@ function EditorPanel({
 
         <TabsContent
           value="settings"
-          className="flex-1 p-4 bg-gray-900 text-gray-100 overflow-auto"
+          className="flex-1 p-4 bg-[#1e1e1e] text-gray-100 overflow-auto scrollbar-thin scrollbar-thumb-[#5a5a5a] scrollbar-track-[#1e1e1e] border-0"
         >
           <div className="space-y-4">
             <h4 className="text-sm font-medium">Editor Settings</h4>
@@ -374,22 +391,22 @@ function EditorPanel({
                 <div className="flex space-x-2">
                   <Button
                     size="sm"
-                    variant={useMonaco ? "default" : "outline"}
-                    onClick={() => setUseMonaco(true)}
+                    variant={useMonacoEditor ? "default" : "outline"}
+                    onClick={() => setUseMonacoEditor(true)}
                   >
                     Monaco
                   </Button>
                   <Button
                     size="sm"
-                    variant={!useMonaco ? "default" : "outline"}
-                    onClick={() => setUseMonaco(false)}
+                    variant={!useMonacoEditor ? "default" : "outline"}
+                    onClick={() => setUseMonacoEditor(false)}
                   >
                     Simple
                   </Button>
                 </div>
               </div>
 
-              {useMonaco && (
+              {useMonacoEditor && (
                 <>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Theme</span>
@@ -407,6 +424,13 @@ function EditorPanel({
                         onClick={() => setTheme("light")}
                       >
                         Light
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={theme === "hc-black" ? "default" : "outline"}
+                        onClick={() => setTheme("hc-black")}
+                      >
+                        High Contrast
                       </Button>
                     </div>
                   </div>
@@ -433,6 +457,90 @@ function EditorPanel({
                       </Button>
                     </div>
                   </div>
+
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-sm">Word Wrap</span>
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        variant={wordWrap === "on" ? "default" : "outline"}
+                        onClick={() => setWordWrap("on")}
+                      >
+                        On
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={wordWrap === "off" ? "default" : "outline"}
+                        onClick={() => setWordWrap("off")}
+                      >
+                        Off
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-sm">Line Numbers</span>
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        variant={lineNumbers === "on" ? "default" : "outline"}
+                        onClick={() => setLineNumbers("on")}
+                      >
+                        On
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={lineNumbers === "off" ? "default" : "outline"}
+                        onClick={() => setLineNumbers("off")}
+                      >
+                        Off
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-sm">Bracket Pair Colorization</span>
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        variant={
+                          bracketPairColorization ? "default" : "outline"
+                        }
+                        onClick={() => setBracketPairColorization(true)}
+                      >
+                        On
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={
+                          !bracketPairColorization ? "default" : "outline"
+                        }
+                        onClick={() => setBracketPairColorization(false)}
+                      >
+                        Off
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-sm">Auto Indent</span>
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        variant={autoIndent ? "default" : "outline"}
+                        onClick={() => setAutoIndent(true)}
+                      >
+                        On
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={!autoIndent ? "default" : "outline"}
+                        onClick={() => setAutoIndent(false)}
+                      >
+                        Off
+                      </Button>
+                    </div>
+                  </div>
                 </>
               )}
 
@@ -446,7 +554,19 @@ function EditorPanel({
                   <span className="text-xs text-gray-400">Enabled</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs">Line Numbers</span>
+                  <span className="text-xs">Format on Type</span>
+                  <span className="text-xs text-gray-400">Enabled</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs">Format on Paste</span>
+                  <span className="text-xs text-gray-400">Enabled</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs">Code Folding</span>
+                  <span className="text-xs text-gray-400">Enabled</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs">Parameter Hints</span>
                   <span className="text-xs text-gray-400">Enabled</span>
                 </div>
               </div>
@@ -459,17 +579,11 @@ function EditorPanel({
         dangerouslySetInnerHTML={{
           __html: `
         .editor-container {
-          overflow: auto !important;
+          width: 100% !important;
+          height: 100% !important;
         }
-        .monaco-editor .monaco-scrollable-element {
-          overflow: visible !important;
-        }
-        .monaco-editor .scrollbar {
-          opacity: 1 !important;
-          background: rgba(50, 50, 50, 0.4) !important;
-        }
-        .monaco-editor .scrollbar .slider {
-          background: rgba(100, 100, 100, 0.8) !important;
+        .monaco-editor, .monaco-editor-background, .monaco-editor .inputarea.ime-input {
+          background-color: #1e1e1e !important;
         }
       `,
         }}
@@ -478,4 +592,4 @@ function EditorPanel({
   );
 }
 
-export default EditorPanel;
+export default React.memo(EditorPanel);
